@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- 引入 Marked.js 用于解析 Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 引入 DOMPurify 用于消毒 HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">RAG Chatbot</div>
+        <div class="chat-box" id="chat-box">
+            <!-- 聊天消息将在此处追加 -->
+        </div>
+        <form id="chat-form" class="chat-input-container">
+            <input type="text" id="query" name="query" placeholder="Ask me anything!" required autocomplete="off">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBox = document.getElementById('chat-box');
+            const chatForm = document.getElementById('chat-form');
+            const queryInput = document.getElementById('query');
+            let isIDEntered = false; // 跟踪是否已输入 Prolific ID
+            let prolificID = ''; // 存储 Prolific ID
+            let pastedFromClipboard = false; // 跟踪输入是否来自剪贴板
+
+            // 函数：追加消息到聊天框
+            function appendMessage(content, className, isAssistant = true) {
+                const message = document.createElement('div');
+                message.className = `chat-message ${className}`;
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+
+                if (isAssistant) {
+                    // 使用 Marked.js 解析 Markdown
+                    const rawHTML = marked.parse(content);
+                    // 使用 DOMPurify 消毒生成的 HTML
+                    const sanitizedHTML = DOMPurify.sanitize(rawHTML);
+                    messageContent.innerHTML = sanitizedHTML;
+                } else {
+                    // 用户消息作为纯文本显示
+                    messageContent.textContent = content;
+                }
+
+                message.appendChild(messageContent);
+                chatBox.appendChild(message);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // 显示初始提示输入 Prolific ID
+            appendMessage("Please enter a valid Prolific ID to continue.", "assistant-message");
+
+            // 监听粘贴事件
+            queryInput.addEventListener('paste', function() {
+                pastedFromClipboard = true;
+            });
+
+            // 处理表单提交
+            chatForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const userQuery = queryInput.value.trim();
+
+                if (userQuery === "") return; // 不处理空输入
+
+                // 追加用户消息到聊天框
+                appendMessage(userQuery, "user-message", false);
+                queryInput.value = '';
+
+                if (!isIDEntered) {
+                    // 将输入视为 Prolific ID
+                    prolificID = userQuery;
+                    isIDEntered = true;
+
+                    // 欢迎消息
+                    appendMessage("Hello, how can I help you today?", "assistant-message");
+                } else {
+                    // 准备发送到服务器的数据
+                    const formData = new FormData();
+                    formData.append('query', userQuery);
+                    formData.append('prolificID', prolificID); // 包含 Prolific ID
+                    formData.append('pasted', pastedFromClipboard); // 发送粘贴标志
+
+                    // 重置粘贴标志
+                    pastedFromClipboard = false;
+
+                    const baseURL = window.location.origin;
+                    
+
+                    print(baseURL);
+
+                    fetch(`${baseURL}/`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const assistantResponse = data.response;
+                        appendMessage(assistantResponse, "assistant-message");
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        appendMessage("Sorry, something went wrong. Please try again later.", "assistant-message");
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+.chat-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    height: 90vh;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.chat-header {
+    background-color: #4a90e2;
+    color: #ffffff;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.5em;
+}
+.chat-box {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.chat-message {
+    display: flex;
+    align-items: center;
+}
+.user-message {
+    justify-content: flex-end;
+}
+.assistant-message {
+    justify-content: flex-start;
+}
+.message-content {
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 70%;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.user-message .message-content {
+    background-color: #dcf8c6;
+    color: #333;
+}
+.assistant-message .message-content {
+    background-color: #f1f0f0;
+    color: #333;
+}
+.chat-input-container {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #f0f0f0;
+    background-color: #ffffff;
+}
+.chat-input-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    margin-right: 10px;
+    outline: none;
+}
+.chat-input-container button {
+    padding: 10px 20px;
+    background-color: #4a90e2;
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .message-content {
+        max-width: 100%;
+    }
+    .chat-box {
+        padding: 10px;
+    }
+    .chat-input-container {
+        padding: 5px;
+    }
+    .chat-input-container input {
+        margin-right: 5px;
+    }
+    .chat-input-container button {
+        padding: 10px;
+    }
+}
+
+
+
+/* 处理 Markdown 元素的样式，保持与现有样式一致 */
+
+/* 无序列表 */
+.message-content ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+/* 有序列表 */
+.message-content ol {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+/* 列表项 */
+.message-content li {
+    margin-bottom: 5px;
+}
+
+/* 加粗文本 */
+.message-content strong {
+    font-weight: bold;
+}
+
+/* 斜体文本 */
+.message-content em {
+    font-style: italic;
+}
+
+/* 段落间距 */
+.message-content p {
+    margin: 5px 0;
+}
+
+/* 代码块 */
+.message-content pre {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+/* 行内代码 */
+.message-content code {
+    background-color: #e0e0e0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* 链接样式 */
+.message-content a {
+    color: #4a90e2;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
