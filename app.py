@@ -1,13 +1,16 @@
 import os
+import io
 import re
 import csv
 import uuid
 import json
 import pickle
 import threading
+import ast
 from datetime import datetime
 from operator import itemgetter
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, render_template, session, make_response
+from threading import Lock
 from flask_session import Session
 from langchain import LLMChain
 from langchain_chroma import Chroma
@@ -249,22 +252,50 @@ JSON: {{ "Completed Question": "How to use Milvus?" }}
 @app.route("/ChatHistory", methods=["GET"])
 def get_chatdata():
     session_id = request.args.get("session_id")
-
     data = []
+
     with csv_lock:
-        with open(CSV_FILE, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                if session_id:
-                    if row['用户ID'] == session_id:
+        try:
+            with open(CSV_FILE, mode='r', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if session_id:
+                        if row.get('用户ID') == session_id:
+                            data.append(row)
+                    else:
                         data.append(row)
-                else:
-                    data.append(row)
-    
+        except FileNotFoundError:
+            return jsonify({"error": "CSV file not found."}), 500
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     if session_id and not data:
         return jsonify({"error": "No data found for the specified session_id."}), 404
 
-    return jsonify({"data": data})
+    si = io.StringIO()
+    if data:
+        fieldnames = data[0].keys()
+        writer = csv.DictWriter(si, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+    else:
+        try:
+            with open(CSV_FILE, mode='r', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                headers = next(reader, [])
+            writer = csv.writer(si)
+            writer.writerow(headers)
+        except Exception as e:
+            return jsonify({"error": "Unable to read CSV headers."}), 500
+
+    output = si.getvalue()
+    si.close()
+
+    response = make_response(output)
+    response.headers["Content-Disposition"] = "attachment; filename=chat_history.csv"
+    response.headers["Content-Type"] = "text/csv"
+
+    return response
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -288,7 +319,7 @@ def home():
     return render_template("index.html")
 
 if __name__ == "__main__":
-    app.run(debug=False)#, port=30716)
+    app.run(debug=False)
 
 
 # export FLASK_APP=flask_app.py
